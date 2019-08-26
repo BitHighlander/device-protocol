@@ -41,12 +41,18 @@ jobs:
       - run:
           name: Publish package
           command: npm publish
-            
+
 workflows:
   version: 2
-  build-and-deploy:
+  build:
     jobs:
       - build
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
       - deploy:
           requires:
             - build
