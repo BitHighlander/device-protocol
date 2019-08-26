@@ -51,8 +51,8 @@ enum MessageType {
 	MessageType_MessageSignature = 40 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
-	MessageType_EstimateTxSize = 43 [(wire_in) = true];
-	MessageType_TxSize = 44 [(wire_out) = true];
+	// Formerly EstimateTxSize = 43
+	// Formerly TxSize = 44
 	MessageType_RecoveryDevice = 45 [(wire_in) = true];
 	MessageType_WordRequest = 46 [(wire_out) = true];
 	MessageType_WordAck = 47 [(wire_in) = true];
@@ -104,12 +104,16 @@ enum MessageType {
 	MessageType_NanoAddress = 701 [(wire_out) = true];
 	MessageType_NanoSignTx = 702 [(wire_in) = true];
 	MessageType_NanoSignedTx = 703 [(wire_out) = true];
-	
+
 	// Cosmos
-	MessageType_CosmosGetAddress = 700 [(wire_in) = true];
-    	MessageType_CosmosAddress = 701 [(wire_out) = true];
-    	MessageType_CosmosSignTx = 702 [(wire_in) = true];
-    	MessageType_CosmosSignedTx = 703 [(wire_out) = true];	
+    MessageType_CosmosGetAddress = 800 [(wire_in) = true];
+    MessageType_CosmosAddress = 801 [(wire_out) = true];
+    MessageType_CosmosSignTx = 802 [(wire_in) = true];
+    MessageType_CosmosTxRequest = 803 [(wire_out) = true];
+    MessageType_CosmosTxAck = 804 [(wire_in) = true];
+    MessageType_CosmosSignMessage = 805 [(wire_in) = true];
+    MessageType_CosmosVerifyMessage = 806 [(wire_in) = true];
+    MessageType_CosmosMessageSignature = 807 [(wire_out) = true];
 }
 
 ////////////////////
@@ -362,6 +366,18 @@ message EthereumGetAddress {
 }
 
 /**
+ * Request: Ask device for Cosmos address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next CosmosAddress
+ * @next Failure
+ */
+message CosmosGetAddress {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// optionally show on display before sending the result
+}
+
+
+/**
  * Response: Contains address derived from device private seed
  * @prev GetAddress
  */
@@ -375,6 +391,15 @@ message Address {
  */
 message EthereumAddress {
 	required bytes address = 1;		// Coin address as an Ethereum 160 bit hash
+	optional string address_str = 2;
+}
+
+/**
+ * Response: Contains an Cosmos address derived from device private seed
+ * @prev CosmosGetAddress
+ */
+message CosmosAddress {
+	required bytes address = 1;		// Coin address as an Cosmos 160 bit hash
 	optional string address_str = 2;
 }
 
@@ -610,27 +635,6 @@ message CipheredKeyValue {
 //////////////////////////////////
 
 /**
- * Request: Estimated size of the transaction
- * This behaves exactly like SignTx, which means that it can ask using TxRequest
- * This call is non-blocking (except possible PassphraseRequest to unlock the seed)
- * @next TxSize
- * @next Failure
- */
-message EstimateTxSize {
-	required uint32 outputs_count = 1;			// number of transaction outputs
-	required uint32 inputs_count = 2;			// number of transaction inputs
-	optional string coin_name = 3 [default='Bitcoin'];	// coin to use
-}
-
-/**
- * Response: Estimated size of the transaction
- * @prev EstimateTxSize
- */
-message TxSize {
-	optional uint32 tx_size = 1;				// estimated size of transaction in bytes
-}
-
-/**
  * Request: Ask device to sign transaction
  * @next PassphraseRequest
  * @next PinMatrixRequest
@@ -699,14 +703,43 @@ message EthereumSignTx {
 	optional bytes data_initial_chunk = 7;		// The initial data chunk (<= 1024 bytes)
 	optional uint32 data_length = 8;		// Length of transaction payload
 	repeated uint32 to_address_n = 9;               // BIP-32 path to derive key for fund transfer
-	optional OutputAddressType address_type = 10;	// output address type 
-	optional ExchangeType exchange_type = 11;	// exchange type data        
+	optional OutputAddressType address_type = 10;	// output address type
+	optional ExchangeType exchange_type = 11;	// exchange type data
 	optional uint32 chain_id = 12;			// Chain Id for EIP 155
 	optional bytes token_value = 100;		// How many tokens to send
 	optional bytes  token_to = 101;			// 160 bit address hash to send tokens to
 	optional string token_shortcut = 102; 		// 3 or 4 character token identifier
 	optional uint32 tx_type = 103;		// (only for Wanchain)
 }
+
+/**
+ * Request: Ask device to sign transaction
+ * All fields are optional from the protocol's point of view. Each field defaults to value `0` if missing.
+ * Note: the first at most 1024 bytes of data MUST be transmitted as part of this message.
+ * @next PassphraseRequest
+ * @next PinMatrixRequest
+ * @next CosmosTxRequest
+ * @next Failure
+ */
+message CosmosSignTx {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bytes nonce = 2;			// <=256 bit unsigned big endian
+	optional bytes gas_price = 3;			// <=256 bit unsigned big endian (in wei)
+	optional bytes gas_limit = 4;			// <=256 bit unsigned big endian
+	optional bytes to = 5;				// 160 bit address hash
+	optional bytes value = 6;			// <=256 bit unsigned big endian (in wei)
+	optional bytes data_initial_chunk = 7;		// The initial data chunk (<= 1024 bytes)
+	optional uint32 data_length = 8;		// Length of transaction payload
+	repeated uint32 to_address_n = 9;               // BIP-32 path to derive key for fund transfer
+	optional OutputAddressType address_type = 10;	// output address type
+	optional ExchangeType exchange_type = 11;	// exchange type data
+	optional uint32 chain_id = 12;			// Chain Id for EIP 155
+	optional bytes token_value = 100;		// How many tokens to send
+	optional bytes  token_to = 101;			// 160 bit address hash to send tokens to
+	optional string token_shortcut = 102; 		// 3 or 4 character token identifier
+	optional uint32 tx_type = 103;		// (only for Wanchain)
+}
+
 
 /**
  * Response: Device asks for more data from transaction payload, or returns the signature.
@@ -725,11 +758,36 @@ message EthereumTxRequest {
 }
 
 /**
+ * Response: Device asks for more data from transaction payload, or returns the signature.
+ * If data_length is set, device awaits that many more bytes of payload.
+ * Otherwise, the signature_* fields contain the computed transaction signature. All three fields will be present.
+ * @prev CosmosSignTx
+ * @next CosmosTxAck
+ */
+message CosmosTxRequest {
+	optional uint32 data_length = 1;  // Number of bytes being requested (<= 1024)
+	optional uint32 signature_v = 2;  // Computed signature (recovery parameter, limited to 27 or 28)
+	optional bytes signature_r = 3;	  // Computed signature R component (256 bit)
+	optional bytes signature_s = 4;	  // Computed signature S component (256 bit)
+	optional bytes hash = 5;	  // Computed hash using SHA3 (keccak_ctx)
+        optional bytes signature_der = 6; // Computed signature in DER format
+}
+
+/**
  * Request: Transaction payload data.
  * @prev EthereumTxRequest
  * @next EthereumTxRequest
  */
 message EthereumTxAck {
+	optional bytes data_chunk = 1;			// Bytes from transaction payload (<= 1024 bytes)
+}
+
+/**
+ * Request: Transaction payload data.
+ * @prev CosmosTxRequest
+ * @next CosmosTxRequest
+ */
+message CosmosTxAck {
 	optional bytes data_chunk = 1;			// Bytes from transaction payload (<= 1024 bytes)
 }
 
@@ -748,6 +806,16 @@ message EthereumSignMessage {
 }
 
 /**
+ * Request: Ask device to sign message
+ * @next CosmosMessageSignature
+ * @next Failure
+ */
+message CosmosSignMessage {
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	required bytes message = 2;				// message to be signed
+}
+
+/**
  * Request: Ask device to verify message
  * @next Success
  * @next Failure
@@ -759,10 +827,30 @@ message EthereumVerifyMessage {
 }
 
 /**
+ * Request: Ask device to verify message
+ * @next Success
+ * @next Failure
+ */
+message CosmosVerifyMessage {
+	optional bytes address = 1;				// address to verify
+	optional bytes signature = 2;				// signature to verify
+	optional bytes message = 3;				// message to verify
+}
+
+/**
  * Response: Signed message
  * @prev EthereumSignMessage
  */
 message EthereumMessageSignature {
+	optional bytes address = 1;				// address used to sign the message
+	optional bytes signature = 2;				// signature of the message
+}
+
+/**
+ * Response: Signed message
+ * @prev CosmosSignMessage
+ */
+message CosmosMessageSignature {
 	optional bytes address = 1;				// address used to sign the message
 	optional bytes signature = 2;				// signature of the message
 }

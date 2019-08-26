@@ -1,6 +1,6 @@
 {
-  "name": "@keepkey/device-protocol",
-  "version": "6.1.2",
+  "name": "@bithighlander/device-protocol",
+  "version": "7.2.0",
   "publishConfig": {
     "access": "public"
   },
