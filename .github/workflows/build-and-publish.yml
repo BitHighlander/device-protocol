@@ -19,7 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          # DO NOT add registry-url here — it injects NODE_AUTH_TOKEN
+          # which blocks OIDC trusted publishing. See docs/trusted-publishing.md
 
       - name: Install dependencies
         run: npm install
@@ -49,7 +50,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          # No registry-url — OIDC handles auth
 
       - name: Install dependencies
         run: npm install
@@ -65,8 +66,10 @@ jobs:
           npm version "$PRE_VERSION" --no-git-tag-version
           echo "Publishing ${PRE_VERSION}"
 
-      - name: Publish pre-release
-        run: npm publish --access public --tag pre
+      - name: Publish pre-release (OIDC)
+        run: |
+          unset NODE_AUTH_TOKEN
+          npm publish --provenance --access public --tag pre
 
   publish-stable:
     needs: build-and-test
@@ -81,7 +84,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          # No registry-url — OIDC handles auth
 
       - name: Install dependencies
         run: npm install
@@ -92,8 +95,10 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Publish to npm
-        run: npm publish --access public
+      - name: Publish to npm (OIDC)
+        run: |
+          unset NODE_AUTH_TOKEN
+          npm publish --provenance --access public
 
       - name: Create git tag
         run: |
