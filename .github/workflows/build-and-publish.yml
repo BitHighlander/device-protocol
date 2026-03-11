@@ -65,18 +65,10 @@ jobs:
           npm version "$PRE_VERSION" --no-git-tag-version
           echo "Publishing ${PRE_VERSION}"
 
-      - name: Debug auth setup
-        run: |
-          echo "npm: $(npm --version)"
-          echo "node: $(node --version)"
-          echo "OIDC URL: ${ACTIONS_ID_TOKEN_REQUEST_URL:+SET}"
-          echo "OIDC TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+SET}"
-          echo "NODE_AUTH_TOKEN: ${NODE_AUTH_TOKEN:+SET}"
-          cat ~/.npmrc 2>/dev/null || echo "no user .npmrc"
-          cat .npmrc 2>/dev/null || echo "no project .npmrc"
-
       - name: Publish pre-release
-        run: npm publish --access public --tag pre --loglevel verbose
+        run: npm publish --access public --tag pre
+        env:
+          NODE_AUTH_TOKEN: ''
 
   publish-stable:
     needs: build-and-test
@@ -104,6 +96,8 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ''
 
       - name: Create git tag
         run: |
