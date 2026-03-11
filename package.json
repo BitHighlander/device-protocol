@@ -8,11 +8,11 @@
   "scripts": {
     "clean": "rm -rf ./lib/*.js ./lib/*.ts",
     "build": "npm run build:js && npm run build:json && npm run build:postprocess",
-    "build:js": "protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs,binary:./lib --ts_out=./lib types.proto messages.proto messages-ethereum.proto messages-eos.proto messages-nano.proto messages-cosmos.proto messages-binance.proto messages-ripple.proto messages-tendermint.proto messages-thorchain.proto messages-osmosis.proto messages-mayachain.proto messages-zcash.proto messages-solana.proto messages-tron.proto messages-ton.proto",
-    "build:json": "pbjs --keep-case -t json ./types.proto ./messages.proto ./messages-ethereum.proto ./messages-eos.proto ./messages-nano.proto ./messages-cosmos.proto ./messages-binance.proto ./messages-ripple.proto ./messages-tendermint.proto ./messages-thorchain.proto ./messages-osmosis.proto ./messages-mayachain.proto ./messages-zcash.proto ./messages-solana.proto ./messages-tron.proto ./messages-ton.proto > ./lib/proto.json",
-    "build:postprocess": "find ./lib -name \"*.js\" -exec sed -i '' -e \"s/var global = Function(\\'return this\\')();/var global = (function(){ return this }).call(null);/g\" {} \\;",
+    "build:js": "./node_modules/.bin/grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs,binary:./lib --ts_out=./lib types.proto messages.proto messages-ethereum.proto messages-eos.proto messages-nano.proto messages-cosmos.proto messages-binance.proto messages-ripple.proto messages-tendermint.proto messages-thorchain.proto messages-osmosis.proto messages-mayachain.proto messages-zcash.proto messages-solana.proto messages-tron.proto messages-ton.proto",
+    "build:json": "node ./node_modules/protobufjs/cli/bin/pbjs --keep-case -t json -p . ./types.proto ./messages.proto ./messages-ethereum.proto ./messages-eos.proto ./messages-nano.proto ./messages-cosmos.proto ./messages-binance.proto ./messages-ripple.proto ./messages-tendermint.proto ./messages-thorchain.proto ./messages-osmosis.proto ./messages-mayachain.proto ./messages-zcash.proto ./messages-solana.proto ./messages-tron.proto ./messages-ton.proto > ./lib/proto.json",
+    "build:postprocess": "find ./lib -name '*.js' -exec sed -i\"\" -e \"s/var global = Function('return this')();/var global = (function(){ return this }).call(null);/g\" {} +",
     "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "grpc-tools": "^1.13.1",
     "protobufjs": "^6.8.8",
     "ts-protoc-gen": "^0.10.0"
   },

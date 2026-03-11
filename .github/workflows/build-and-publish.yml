@@ -5,15 +5,13 @@ on:
     branches: [develop, master]
   pull_request:
     branches: [develop, master]
-  release:
-    types: [published]
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,20 +21,14 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-
       - name: Install dependencies
         run: npm install
 
       - name: Build
         run: npm run build
 
-      - name: Verify lib output
-        run: |
-          test -f lib/proto.json || (echo "proto.json missing" && exit 1)
-          test -f lib/messages_pb.js || (echo "messages_pb.js missing" && exit 1)
-          echo "Build artifacts OK"
+      - name: Test
+        run: npm test
 
       - name: Upload lib artifact
         uses: actions/upload-artifact@v4
@@ -44,10 +36,10 @@ jobs:
           name: lib
           path: lib/
 
-  publish:
-    needs: build
+  publish-prerelease:
+    needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     permissions:
       id-token: write
       contents: read
@@ -59,8 +51,37 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Set pre-release version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          PRE_VERSION="${BASE}-pre.${SHORT_SHA}"
+          npm version "$PRE_VERSION" --no-git-tag-version
+          echo "Publishing ${PRE_VERSION}"
+
+      - name: Publish pre-release
+        run: npm publish --access public --tag pre
+
+  publish-stable:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: npm install
@@ -68,5 +89,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm test
+
       - name: Publish to npm
         run: npm publish --access public
+
+      - name: Create git tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
