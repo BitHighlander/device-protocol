@@ -18,7 +18,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -47,10 +48,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-
-      - name: Configure npm registry
-        run: npm config set registry https://registry.npmjs.org/
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -65,13 +64,6 @@ jobs:
           PRE_VERSION="${BASE}-pre.${SHORT_SHA}"
           npm version "$PRE_VERSION" --no-git-tag-version
           echo "Publishing ${PRE_VERSION}"
-
-      - name: Debug OIDC environment
-        run: |
-          echo "npm version: $(npm --version)"
-          echo "node version: $(node --version)"
-          echo "OIDC URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-          npm config list
 
       - name: Publish pre-release
         run: npm publish --access public --tag pre
@@ -88,10 +80,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-
-      - name: Configure npm registry
-        run: npm config set registry https://registry.npmjs.org/
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
