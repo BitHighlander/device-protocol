@@ -49,7 +49,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -66,9 +65,7 @@ jobs:
           echo "Publishing ${PRE_VERSION}"
 
       - name: Publish pre-release
-        run: npm publish --access public --tag pre
-        env:
-          NODE_AUTH_TOKEN: ''
+        run: npm publish --access public --tag pre --registry https://registry.npmjs.org
 
   publish-stable:
     needs: build-and-test
@@ -83,7 +80,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -95,9 +91,7 @@ jobs:
         run: npm test
 
       - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ''
+        run: npm publish --access public --registry https://registry.npmjs.org
 
       - name: Create git tag
         run: |
