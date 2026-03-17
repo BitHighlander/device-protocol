@@ -37,16 +37,24 @@ message TonAddress {
  * Request: ask device to sign TON transaction
  * @start
  * @next TonSignedTx
+ *
+ * Two modes:
+ * 1. Legacy blind-sign: provide raw_tx (shows warning)
+ * 2. Structured reconstruct-then-sign: provide destination, ton_amount, seqno
+ *    Firmware reconstructs v4r2 signing message deterministically
  */
 message TonSignTx {
     repeated uint32 address_n = 1;                // BIP-32 path to derive the key from master node
     optional string coin_name = 2 [default='Ton'];
-    optional bytes raw_tx = 3;                    // Raw transaction data (serialized by client)
-    optional uint32 expire_at = 4;                // Transaction expiration timestamp
+    optional bytes raw_tx = 3;                    // Legacy: raw signing message (blind-sign with warning)
+    optional uint32 expire_at = 4;                // Transaction expiration (unix timestamp)
     optional uint32 seqno = 5;                    // Wallet sequence number
     optional sint32 workchain = 6 [default=0];    // Workchain ID (-1 or 0)
-    optional string to_address = 7;               // Destination address (for display)
-    optional uint64 amount = 8;                   // Transfer amount in nanoTON (for display)
+    optional string destination = 7;              // Structured: user-friendly Base64 destination address
+    optional uint64 ton_amount = 8;               // Structured: amount in nanoTON
+    optional string comment = 9;                  // Structured: text comment (max 127 bytes)
+    optional bool bounce = 10 [default=true];     // Structured: bounce flag for internal message
+    optional uint32 mode = 11 [default=3];        // Structured: send mode (default 3 = pay fees separately)
 }
 
 /**
@@ -55,4 +63,5 @@ message TonSignTx {
  */
 message TonSignedTx {
     optional bytes signature = 1;                 // Ed25519 signature (64 bytes)
+    optional bytes cell_hash = 2;                 // SHA256 hash of reconstructed signing cell
 }
