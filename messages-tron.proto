@@ -70,6 +70,7 @@ message TronSignTx {
     optional TronTriggerSmartContract trigger_smart = 11; // Structured: smart contract call
     optional uint64 fee_limit = 12;               // Fee limit for smart contracts (in SUN)
     optional uint64 timestamp = 13;               // Transaction creation timestamp (ms)
+    optional bytes data = 14;                     // Transaction memo/note (max 256 bytes)
 }
 
 /**
