@@ -41,7 +41,9 @@ message ZcashSignPCZT {
     // Phase 3: transparent shielding support
     optional uint32 n_transparent_inputs = 30;  // 0 for shielded-only (default), >0 for hybrid shielding tx
     // Seed identity binding (ZIP-32 §6.1)
-    optional bytes expected_seed_fingerprint = 31;  // 32-byte BLAKE2b-256("Zcash_HD_Seed_FP", seed).
+    optional bytes expected_seed_fingerprint = 31;  // 32-byte ZIP-32 §6.1 seed fingerprint:
+                                                    //   BLAKE2b-256("Zcash_HD_Seed_FP",
+                                                    //               I2LEBSP_8(len(seed)) || seed)
                                                     // If present, device verifies match against its own
                                                     // seed fingerprint and rejects with Failure on mismatch.
 }
@@ -120,7 +122,9 @@ message ZcashOrchardFVK {
     optional bytes ak = 1;                  // 32-byte authorizing key (Pallas point)
     optional bytes nk = 2;                  // 32-byte nullifier deriving key
     optional bytes rivk = 3;               // 32-byte commitment randomness key
-    optional bytes seed_fingerprint = 4;    // 32-byte BLAKE2b-256("Zcash_HD_Seed_FP", seed) — ZIP-32 §6.1
+    optional bytes seed_fingerprint = 4;    // 32-byte ZIP-32 §6.1 seed fingerprint:
+                                            //   BLAKE2b-256("Zcash_HD_Seed_FP",
+                                            //               I2LEBSP_8(len(seed)) || seed)
                                             // Stable identity of the device's seed; lets a host pin an FVK
                                             // to a specific seed across sessions.
 }
