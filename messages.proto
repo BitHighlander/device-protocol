@@ -105,6 +105,12 @@ enum MessageType {
   MessageType_GetBip85Mnemonic = 120 [ (wire_in) = true ];
   MessageType_Bip85Mnemonic = 121 [ (wire_out) = true ];
 
+  // Insight metadata key management (slots 4-6 user-provisioned)
+  MessageType_AddMetadataKey = 122 [ (wire_in) = true ];
+  MessageType_RemoveMetadataKey = 123 [ (wire_in) = true ];
+  MessageType_ListMetadataKeys = 124 [ (wire_in) = true ];
+  MessageType_MetadataKeysList = 125 [ (wire_out) = true ];
+
   // Ripple
   MessageType_RippleGetAddress = 400 [ (wire_in) = true ];
   MessageType_RippleAddress = 401 [ (wire_out) = true ];
@@ -859,6 +865,53 @@ message SignedIdentity {
  */
 message ApplyPolicies {
   repeated PolicyType policy = 1; // policy
+}
+
+///////////////////////////////////////////
+// Insight metadata key management        //
+///////////////////////////////////////////
+
+/**
+ * Request: Add a user-provisioned signing key to a metadata slot (4-6).
+ * Device displays the key fingerprint and requires PIN + button confirm.
+ * Slots 0-3 are firmware-baked and cannot be overwritten.
+ * @next Success
+ * @next Failure
+ * @next ButtonRequest
+ * @next PinMatrixRequest
+ */
+message AddMetadataKey {
+  required uint32 slot = 1;       // 4-6
+  required bytes pubkey = 2;      // 33-byte compressed secp256k1 public key
+  required string label = 3;      // max 16 chars, displayed during verification
+}
+
+/**
+ * Request: Remove a user-provisioned signing key. Requires PIN + button
+ * confirm showing the key fingerprint to prevent stealth removal.
+ * @next Success
+ * @next Failure
+ * @next ButtonRequest
+ * @next PinMatrixRequest
+ */
+message RemoveMetadataKey {
+  required uint32 slot = 1;       // 4-6
+}
+
+/**
+ * Request: List metadata signing keys (firmware + user-provisioned).
+ * Empty slots are omitted from the response.
+ * @next MetadataKeysList
+ */
+message ListMetadataKeys {
+}
+
+/**
+ * Response: List of metadata signing keys.
+ * @prev ListMetadataKeys
+ */
+message MetadataKeysList {
+  repeated MetadataKeyType keys = 1;
 }
 
 /////////////////////////
