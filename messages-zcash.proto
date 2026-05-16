@@ -40,6 +40,12 @@ message ZcashSignPCZT {
     optional bytes orchard_anchor = 14;         // 32-byte orchard anchor
     // Phase 3: transparent shielding support
     optional uint32 n_transparent_inputs = 30;  // 0 for shielded-only (default), >0 for hybrid shielding tx
+    // Seed identity binding (ZIP-32 §6.1)
+    optional bytes expected_seed_fingerprint = 31;  // 32-byte ZIP-32 §6.1 seed fingerprint:
+                                                    //   BLAKE2b-256("Zcash_HD_Seed_FP",
+                                                    //               I2LEBSP_8(len(seed)) || seed)
+                                                    // If present, device verifies match against its own
+                                                    // seed fingerprint and rejects with Failure on mismatch.
 }
 
 /**
@@ -116,6 +122,11 @@ message ZcashOrchardFVK {
     optional bytes ak = 1;                  // 32-byte authorizing key (Pallas point)
     optional bytes nk = 2;                  // 32-byte nullifier deriving key
     optional bytes rivk = 3;               // 32-byte commitment randomness key
+    optional bytes seed_fingerprint = 4;    // 32-byte ZIP-32 §6.1 seed fingerprint:
+                                            //   BLAKE2b-256("Zcash_HD_Seed_FP",
+                                            //               I2LEBSP_8(len(seed)) || seed)
+                                            // Stable identity of the device's seed; lets a host pin an FVK
+                                            // to a specific seed across sessions.
 }
 
 /**
@@ -150,30 +161,43 @@ message ZcashTransparentSig {
 }
 
 /**
- * Request: Display and verify a Zcash unified address on device.
+ * Request: Display the device-derived Orchard unified address on screen.
  *
- * The host provides the unified address string and the FVK components
- * (ak, nk, rivk). The device re-derives its own Orchard keys from seed
- * and compares them against the provided FVK to verify the Orchard
- * receiver belongs to this device.
+ * The device derives the Orchard-only Unified Address (Sinsemilla + SWU
+ * hash-to-curve, default diversifier index 0) from its own seed at the
+ * requested account and shows it on the OLED with a QR code. What appears
+ * on screen is bound to this device — there is no host-supplied address
+ * to validate.
+ *
+ * Either account or a complete address_n path (m/32'/133'/account', all
+ * hardened) is REQUIRED. The device rejects requests that omit both.
+ *
+ * Fields 3–6 (host-supplied address, ak, nk, rivk) were removed when the
+ * device gained on-device UA derivation: FVK-match attestation against a
+ * host-built UA is strictly weaker than device-derived display and was
+ * dropped. Field numbers are reserved to prevent reuse.
  *
  * @next ZcashAddress
  * @next Failure
  */
 message ZcashDisplayAddress {
-    repeated uint32 address_n = 1;          // ZIP-32 derivation path [32', 133', account']
-    optional uint32 account = 2;            // Account index (alternative to full path)
-    optional string address = 3;            // Unified address string (u1...)
-    optional bytes ak = 4;                  // 32-byte authorizing key for verification
-    optional bytes nk = 5;                  // 32-byte nullifier deriving key for verification
-    optional bytes rivk = 6;               // 32-byte commitment randomness key for verification
+    reserved 3, 4, 5, 6;
+    reserved "address", "ak", "nk", "rivk";
+    repeated uint32 address_n = 1;          // ZIP-32 path [32', 133', account'] — required if account omitted
+    optional uint32 account = 2;            // Account index — required if address_n omitted
+    optional bytes expected_seed_fingerprint = 7;  // 32-byte ZIP-32 §6.1 seed fingerprint.
+                                                   // If present, device verifies match against its own
+                                                   // seed fingerprint and rejects with Failure on mismatch.
 }
 
 /**
- * Response: Verified Zcash address.
+ * Response: Confirmed Zcash address after user approval on device.
  *
  * @prev ZcashDisplayAddress
  */
 message ZcashAddress {
-    optional string address = 1;            // Verified unified address string
+    optional string address = 1;            // Confirmed unified address
+    optional bytes seed_fingerprint = 2;    // 32-byte ZIP-32 §6.1 seed fingerprint of the attesting
+                                            // device. Returned alongside the confirmed address so a host
+                                            // can record that this UA is bound to this device's seed.
 }
