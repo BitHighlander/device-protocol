@@ -253,6 +253,12 @@ enum MessageType {
   MessageType_HiveSignedAccountCreate = 1607 [ (wire_out) = true ];
   MessageType_HiveSignAccountUpdate = 1608 [ (wire_in) = true ];
   MessageType_HiveSignedAccountUpdate = 1609 [ (wire_out) = true ];
+
+  // NEAR
+  MessageType_NearGetAddress = 1610 [ (wire_in) = true ];
+  MessageType_NearAddress = 1611 [ (wire_out) = true ];
+  MessageType_NearSignTx = 1612 [ (wire_in) = true ];
+  MessageType_NearSignedTx = 1613 [ (wire_out) = true ];
 }
 
 ////////////////////
