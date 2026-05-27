@@ -97,6 +97,10 @@ enum MessageType {
   MessageType_EthereumTypedDataSignature = 113 [ (wire_out) = true ];
   MessageType_Ethereum712TypesValues = 114 [ (wire_in) = true ];
 
+  // Ethereum Clear Signing
+  MessageType_EthereumTxMetadata = 115 [ (wire_in) = true ];
+  MessageType_EthereumMetadataAck = 116 [ (wire_out) = true ];
+
   // BIP-85
   MessageType_GetBip85Mnemonic = 120 [ (wire_in) = true ];
   MessageType_Bip85Mnemonic = 121 [ (wire_out) = true ];
@@ -136,6 +140,8 @@ enum MessageType {
   MessageType_SolanaSignedTx = 753 [ (wire_out) = true ];
   MessageType_SolanaSignMessage = 754 [ (wire_in) = true ];
   MessageType_SolanaMessageSignature = 755 [ (wire_out) = true ];
+  MessageType_SolanaSignOffchainMessage = 756 [ (wire_in) = true ];
+  MessageType_SolanaOffchainMessageSignature = 757 [ (wire_out) = true ];
 
   // Binance
   MessageType_BinanceGetAddress = 800 [ (wire_in) = true ];
@@ -210,18 +216,43 @@ enum MessageType {
   MessageType_ZcashSignedPCZT = 1303 [ (wire_out) = true ];
   MessageType_ZcashGetOrchardFVK = 1304 [ (wire_in) = true ];
   MessageType_ZcashOrchardFVK = 1305 [ (wire_out) = true ];
+  MessageType_ZcashTransparentInput = 1306 [ (wire_in) = true ];
+  MessageType_ZcashTransparentSigned = 1307 [ (wire_out) = true ];
+  MessageType_ZcashDisplayAddress = 1308 [ (wire_in) = true ];
+  MessageType_ZcashAddress = 1309 [ (wire_out) = true ];
+  MessageType_ZcashTransparentOutput = 1310 [ (wire_in) = true ];
+  MessageType_ZcashTransparentAck = 1311 [ (wire_out) = true ];
 
   // TRON
   MessageType_TronGetAddress = 1400 [ (wire_in) = true ];
   MessageType_TronAddress = 1401 [ (wire_out) = true ];
   MessageType_TronSignTx = 1402 [ (wire_in) = true ];
   MessageType_TronSignedTx = 1403 [ (wire_out) = true ];
+  MessageType_TronSignMessage = 1404 [ (wire_in) = true ];
+  MessageType_TronMessageSignature = 1405 [ (wire_out) = true ];
+  MessageType_TronVerifyMessage = 1406 [ (wire_in) = true ];
+  MessageType_TronSignTypedHash = 1407 [ (wire_in) = true ];
+  MessageType_TronTypedDataSignature = 1408 [ (wire_out) = true ];
 
   // TON
   MessageType_TonGetAddress = 1500 [ (wire_in) = true ];
   MessageType_TonAddress = 1501 [ (wire_out) = true ];
   MessageType_TonSignTx = 1502 [ (wire_in) = true ];
   MessageType_TonSignedTx = 1503 [ (wire_out) = true ];
+  MessageType_TonSignMessage = 1504 [ (wire_in) = true ];
+  MessageType_TonMessageSignature = 1505 [ (wire_out) = true ];
+
+  // Hive
+  MessageType_HiveGetPublicKey = 1600 [ (wire_in) = true ];
+  MessageType_HivePublicKey = 1601 [ (wire_out) = true ];
+  MessageType_HiveSignTx = 1602 [ (wire_in) = true ];
+  MessageType_HiveSignedTx = 1603 [ (wire_out) = true ];
+  MessageType_HiveGetPublicKeys = 1604 [ (wire_in) = true ];
+  MessageType_HivePublicKeys = 1605 [ (wire_out) = true ];
+  MessageType_HiveSignAccountCreate = 1606 [ (wire_in) = true ];
+  MessageType_HiveSignedAccountCreate = 1607 [ (wire_out) = true ];
+  MessageType_HiveSignAccountUpdate = 1608 [ (wire_in) = true ];
+  MessageType_HiveSignedAccountUpdate = 1609 [ (wire_out) = true ];
 }
 
 ////////////////////
@@ -736,8 +767,10 @@ message CipheredKeyValue {
 //////////////////////
 
 /**
- * Request: Ask device to derive a BIP-85 child mnemonic
- * @next Bip85Mnemonic
+ * Request: Ask device to derive and display a BIP-85 child mnemonic.
+ * The mnemonic is shown on the device screen only — never sent over USB.
+ * @next Success
+ * @next Failure
  */
 message GetBip85Mnemonic {
   required uint32 word_count = 1; // number of words in derived mnemonic (12, 18, or 24)
@@ -745,11 +778,13 @@ message GetBip85Mnemonic {
 }
 
 /**
- * Response: Contains BIP-85 derived child mnemonic
+ * Response: Contains BIP-85 derived child mnemonic (DEPRECATED).
+ * Firmware >= 7.14.0 responds with Success instead — mnemonic is display-only.
+ * Retained for wire compatibility with older firmware.
  * @prev GetBip85Mnemonic
  */
 message Bip85Mnemonic {
-  required string mnemonic = 1; // BIP-85 derived mnemonic
+  required string mnemonic = 1; // BIP-85 derived mnemonic (legacy, no longer sent)
 }
 
 //////////////////////////////////
