@@ -333,3 +333,16 @@ message PolicyType {
 	optional string policy_name = 1;	// name of policy
 	optional bool enabled = 2;				// status of policy
 }
+
+/**
+ * Structure representing a signing key for EVM clear-signing metadata.
+ * Slots 0-3 are firmware-baked. Slots 4-6 are user-provisioned at runtime
+ * via AddMetadataKey, letting companies sign their own descriptor sets that
+ * members verify on their own KeepKey.
+ * @used_in AddMetadataKey, MetadataKeysList
+ */
+message MetadataKeyType {
+	optional uint32 slot = 1;	// 0-6 (0-3 firmware-baked, 4-6 user-added)
+	optional bytes pubkey = 2;	// 33-byte compressed secp256k1 public key
+	optional string label = 3;	// displayed during verification (max 16 chars)
+}
