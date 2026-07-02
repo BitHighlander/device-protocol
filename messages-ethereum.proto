@@ -113,6 +113,22 @@ message EthereumMetadataAck {
 	optional string display_summary = 2;		// Brief result for host logging
 }
 
+/**
+ * Request: Load a clearsign signer public key + alias into a runtime key slot.
+ * The device shows a mandatory confirmation (alias + key fingerprint) before
+ * accepting; there is no way to load a signer without user consent. Loaded
+ * signers live in RAM only and are cleared on reboot. Every transaction whose
+ * metadata was verified by a loaded (non built-in) signer is preceded by a
+ * warning screen naming the alias during transaction confirmation.
+ * @next Success
+ * @next Failure
+ */
+message LoadClearsignSigner {
+	optional uint32 key_id = 1;		// target key slot (0-3); must not hold a built-in key
+	optional bytes pubkey = 2;		// 33-byte compressed secp256k1 public key
+	optional string alias = 3;		// short display name shown on load confirm + per-tx warning
+}
+
 ////////////////////////////////////////
 // Ethereum: Message signing messages //
 ////////////////////////////////////////
