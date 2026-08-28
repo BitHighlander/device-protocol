@@ -1,6 +1,6 @@
 {
-  "name": "@keepkey/device-protocol",
-  "version": "7.14.1",
+  "name": "@bithighlander/device-protocol",
+  "version": "7.18.0",
   "publishConfig": {
     "access": "public"
   },
@@ -13,11 +13,11 @@
     "build:postprocess": "node tools/postprocess-lib.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.keepkey.com:client-software/device-protocol.git"
+    "url": "https://github.com/BitHighlander/device-protocol.git"
   },
   "author": "",
   "license": "ISC",
