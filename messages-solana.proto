@@ -62,6 +62,11 @@ message SolanaSignTx {
     // 32-byte big-endian r || 32-byte big-endian s; no recovery byte or DER.
     optional bytes lut_signature = 6;
     optional uint32 lut_signer_key_id = 7;   // runtime provider slot, 0..3
+    // Missing fields, invalid account count/width, a missing or non-64-byte
+    // signature, failed signature verification, or a missing/out-of-range/
+    // unloaded signer slot all ignore the attestation and retain the ordinary
+    // unverified review. They do not alone reject the transaction. Normal
+    // transaction validity and policy checks still apply; cancellation aborts.
 
 }
 
