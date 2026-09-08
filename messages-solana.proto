@@ -49,6 +49,25 @@ message SolanaSignTx {
     optional string coin_name = 2 [default = "Solana"];
     optional bytes raw_tx = 3;              // Serialized Solana transaction bytes
     repeated SolanaTokenInfo token_info = 4; // Token metadata for display (max 4)
+    // Additive provider context. The normal unverified review remains required.
+    // Signature preimage: "KeepKeySolanaTxAccounts/1" || sha256(raw_tx)
+    // || count(le32) || lut_account[0..count-1] (32 bytes each).
+    // Account order is the repeated-field wire order, preserved by the host
+    // when signing and by the device when verifying/displaying. Neither side
+    // sorts or deduplicates the list; any reordering changes the preimage.
+    // Each entry MUST be exactly 32 bytes; otherwise ignore the attestation
+    // and retain the ordinary unverified review. A valid list has 1..8 entries.
+    repeated bytes lut_account = 5;
+    // ECDSA over secp256k1, signing SHA256(the preimage above). Encode as
+    // 32-byte big-endian r || 32-byte big-endian s; no recovery byte or DER.
+    optional bytes lut_signature = 6;
+    optional uint32 lut_signer_key_id = 7;   // runtime provider slot, 0..3
+    // Missing fields, invalid account count/width, a missing or non-64-byte
+    // signature, failed signature verification, or a missing/out-of-range/
+    // unloaded signer slot all ignore the attestation and retain the ordinary
+    // unverified review. They do not alone reject the transaction. Normal
+    // transaction validity and policy checks still apply; cancellation aborts.
+
 }
 
 /**
