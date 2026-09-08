@@ -51,7 +51,7 @@ message SolanaSignTx {
     repeated SolanaTokenInfo token_info = 4; // Token metadata for display (max 4)
     // Additive provider context. The normal unverified review remains required.
     // Signature preimage: "KeepKeySolanaTxAccounts/1" || sha256(raw_tx)
-    // || count(le32) || account[0..count-1] (32 bytes each).
+    // || count(le32) || lut_account[0..count-1] (32 bytes each).
     // Account order is the repeated-field wire order, preserved by the host
     // when signing and by the device when verifying/displaying. Neither side
     // sorts or deduplicates the list; any reordering changes the preimage.
