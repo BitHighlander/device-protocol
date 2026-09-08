@@ -118,8 +118,9 @@ message EthereumMetadataAck {
  * The device shows a mandatory confirmation (alias + key fingerprint) before
  * accepting; there is no way to load a signer without user consent.
  * A signer is RAM-only and is cleared on reboot. The persist field is retained
- * for wire compatibility; the current implementation rejects persist=true. Every transaction whose metadata was verified by a loaded
- * (non built-in) signer is preceded by a warning screen naming the alias
+ * for wire compatibility; the current implementation rejects persist=true.
+ * Every transaction whose metadata was verified by a loaded (non-built-in)
+ * signer is preceded by a warning screen naming the alias
  * during transaction confirmation.
  * @next Success
  * @next Failure
