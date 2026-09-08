@@ -52,6 +52,9 @@ message SolanaSignTx {
     // Additive provider context. The normal unverified review remains required.
     // Signature preimage: "KeepKeySolanaTxAccounts/1" || sha256(raw_tx)
     // || count(le32) || account[0..count-1] (32 bytes each).
+    // Account order is the repeated-field wire order, preserved by the host
+    // when signing and by the device when verifying/displaying. Neither side
+    // sorts or deduplicates the list; any reordering changes the preimage.
     repeated bytes lut_account = 5;         // resolved accounts, at most 8
     optional bytes lut_signature = 6;       // 64-byte compact secp256k1 signature
     optional uint32 lut_signer_key_id = 7;   // runtime provider slot, 0..3
