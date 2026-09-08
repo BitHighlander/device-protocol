@@ -49,6 +49,13 @@ message SolanaSignTx {
     optional string coin_name = 2 [default = "Solana"];
     optional bytes raw_tx = 3;              // Serialized Solana transaction bytes
     repeated SolanaTokenInfo token_info = 4; // Token metadata for display (max 4)
+    // Additive provider context. The normal unverified review remains required.
+    // Signature preimage: "KeepKeySolanaTxAccounts/1" || sha256(raw_tx)
+    // || count(le32) || account[0..count-1] (32 bytes each).
+    repeated bytes lut_account = 5;         // resolved accounts, at most 8
+    optional bytes lut_signature = 6;       // 64-byte compact secp256k1 signature
+    optional uint32 lut_signer_key_id = 7;   // runtime provider slot, 0..3
+
 }
 
 /**
