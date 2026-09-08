@@ -55,8 +55,12 @@ message SolanaSignTx {
     // Account order is the repeated-field wire order, preserved by the host
     // when signing and by the device when verifying/displaying. Neither side
     // sorts or deduplicates the list; any reordering changes the preimage.
-    repeated bytes lut_account = 5;         // resolved accounts, at most 8
-    optional bytes lut_signature = 6;       // 64-byte compact secp256k1 signature
+    // Each entry MUST be exactly 32 bytes; otherwise ignore the attestation
+    // and retain the ordinary unverified review. A valid list has 1..8 entries.
+    repeated bytes lut_account = 5;
+    // ECDSA over secp256k1, signing SHA256(the preimage above). Encode as
+    // 32-byte big-endian r || 32-byte big-endian s; no recovery byte or DER.
+    optional bytes lut_signature = 6;
     optional uint32 lut_signer_key_id = 7;   // runtime provider slot, 0..3
 
 }
