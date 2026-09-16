@@ -111,6 +111,10 @@ enum MessageType {
   MessageType_EthereumTypedDataStructAck = 1706 [ (wire_in) = true ];
   MessageType_EthereumTypedDataValueRequest = 1707 [ (wire_out) = true ];
   MessageType_EthereumTypedDataValueAck = 1708 [ (wire_in) = true ];
+  MessageType_EthereumClearSignDefinition = 1709 [ (wire_in) = true ];
+  MessageType_EthereumClearSignDefinitionAck = 1710 [ (wire_out) = true ];
+  MessageType_EthereumClearSignDefinitionRequest = 1711 [ (wire_out) = true ];
+  MessageType_EthereumClearSignDefinitionChunk = 1712 [ (wire_in) = true ];
 
   // BIP-85
   MessageType_GetBip85Mnemonic = 120 [ (wire_in) = true ];
