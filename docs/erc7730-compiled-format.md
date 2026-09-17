@@ -43,6 +43,14 @@ the exact canonical program. The delegate certificate binds that signature to
 one chain and the compiled-in KeepKey root; the purpose prefix prevents replay
 as v1-v4 ClearSign metadata.
 
+On-demand offsets address this complete envelope, with offset zero at `K773`.
+The definition id is SHA-256 of the complete envelope and does not make
+individual ranges independently authentic. Firmware rereads an accepted
+definition as a contiguous offset-zero stream, hashes and validates the full
+envelope again, and stages bounded interpreter results until that replay has
+matched the accepted definition id. No display result derived from replayed
+bytes becomes authoritative before the final match.
+
 ## Canonical program header
 
 The format-1 header is exactly 179 bytes.
