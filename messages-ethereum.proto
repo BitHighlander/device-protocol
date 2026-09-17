@@ -420,7 +420,10 @@ message EthereumClearSignDefinitionAck {
  * The lookup tuple is authenticated again from the returned definition; these
  * fields select an entry but never grant trust. selector_or_type_hash is four
  * bytes for calldata, 32 bytes for EIP-712, and omitted for token/network
- * lookups.
+ * lookups. Offsets address the complete signed envelope, beginning at K773.
+ * A definition_id commits to the entire envelope, not independently
+ * authenticated ranges, so firmware verifies a contiguous offset-zero replay
+ * before consuming its program bytes for display.
  * @next EthereumClearSignDefinitionChunk
  * @next Failure
  */
@@ -435,7 +438,12 @@ message EthereumClearSignDefinitionRequest {
     optional uint32 recursion_depth = 8;
 }
 
-/** Host response to an on-demand definition request. */
+/**
+ * Host response to an on-demand definition request. Chunks are contiguous and
+ * offset is relative to the complete signed envelope. Program bytes remain
+ * untrusted until the complete replay hashes to definition_id and its catalog
+ * authentication verifies.
+ */
 message EthereumClearSignDefinitionChunk {
     required bytes definition_id = 1;
     required uint32 offset = 2;
