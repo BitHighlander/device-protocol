@@ -142,9 +142,9 @@ indices below are unsigned big endian; `0xffff` means absent only where stated.
 `count:u16`, followed by `length:u16 || UTF-8 bytes` for each string. Count is
 at most 96 and length is 1 through 128 bytes. Strings are strictly increasing
 by unsigned bytewise comparison. UTF-8 must be shortest-form scalar-value
-encoding; surrogates, NUL and control characters other than ordinary space are
-rejected. Display text may contain line feeds only when the instruction using
-it explicitly permits multiline output.
+encoding; surrogates, NUL, ASCII controls and DEL are rejected. Layout creates
+line breaks between instructions rather than accepting descriptor-controlled
+control characters.
 
 ### 2. ABI node table
 
@@ -215,10 +215,13 @@ collection (3), decimals (4), base unit (5), SI-prefix flag (6), threshold (7),
 threshold message (8), encoding (9), enum map (10), chain id (11), address
 types (12), name sources (13), sender aliases (14), callee (15), selector (16),
 amount (17), spender (18), encryption scheme (19), plaintext type (20), and
-fallback label (21). Unknown kinds, roles, flags or invalid kind/role/source
-combinations are rejected. Live name, token, NFT, time or decryption results
-can annotate the device-decoded operand but have no representation capable of
-replacing it.
+fallback label (21), native-currency address set (22), and plaintext formatter
+(23). Every formatter has exactly one value role and its source is always a
+path; literal constants are represented by literal-source paths. Encrypted
+formatters require scheme, plaintext type and plaintext formatter roles.
+Unknown kinds, roles, flags or invalid kind/role/source combinations are
+rejected. Live name, token, NFT, time or decryption results can annotate the
+device-decoded operand but have no representation capable of replacing it.
 
 ### 7. Display instruction table
 
