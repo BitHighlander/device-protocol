@@ -85,9 +85,10 @@ ascending. Format 1 defines:
 9. resource declaration
 
 Indices are zero-based unsigned 16-bit integers. `0xffff` is the absent index.
-Strings are UTF-8, length-prefixed by a minimal `u16`, contain no NUL, and are
-stored in first-use order with duplicates interned. Byte literals use a `u32`
-length. Tables use a `u16` entry count followed by entries.
+Strings are UTF-8, length-prefixed by a `u16`, contain no NUL, and are stored
+in ascending bytewise order with duplicates forbidden. Sorting lets bounded
+firmware prove interning by comparing only adjacent strings. Byte literals use
+a `u16` length. Tables use a `u16` entry count followed by entries.
 
 ## Flat ABI node table
 
@@ -128,6 +129,152 @@ field, group begin/end, array begin/end, separator and embedded call. Forward
 jumps are allowed only for false conditions and loop ends. There are no
 backward jumps except the bounded array iterator. Embedded calls carry a
 definition lookup key and decrement the signed recursion budget.
+
+## Exact section encodings
+
+Sections omitted from a definition must be semantically empty. Calldata and
+EIP-712 programs require sections 1, 2, 3, 6, 7, 8 and 9. Token and network
+programs require sections 1, 4, 8 and 9. Section 9 is always last. Counts and
+indices below are unsigned big endian; `0xffff` means absent only where stated.
+
+### 1. String table
+
+`count:u16`, followed by `length:u16 || UTF-8 bytes` for each string. Count is
+at most 96 and length is 1 through 128 bytes. Strings are strictly increasing
+by unsigned bytewise comparison. UTF-8 must be shortest-form scalar-value
+encoding; surrogates, NUL and control characters other than ordinary space are
+rejected. Display text may contain line feeds only when the instruction using
+it explicitly permits multiline output.
+
+### 2. ABI node table
+
+`count:u16`, followed by the 9-byte nodes defined above. Node zero is the root
+tuple. Every non-root node has exactly one parent, every edge points forward,
+and the child ranges cover exactly nodes 1 through `count-1`. This makes the
+wire representation a canonical tree rather than an aliasable DAG.
+
+### 3. Path table
+
+`count:u16`, followed by variable-length entries:
+
+`source:u8 || step_count:u8 || source_index:u16 || steps`
+
+Sources are structured value (1), container (2), or literal (3). Structured
+paths require `source_index=0xffff`. Container and literal paths have no steps;
+their index selects a container value or section-4 literal. Container values
+are from (1), to (2), value (3), chainId (4), EIP-712 domain (5), and primary
+type (6).
+
+Each step begins with an opcode:
+
+| Opcode | Encoding | Meaning |
+|---:|---|---|
+| 1 | `index:i32` | tuple field or array element; array indices may be negative |
+| 2 | none | all elements of the current array |
+| 3 | `flags:u8 [start:i32] [end:i32]` | half-open slice; flags bit 0/1 indicate start/end |
+
+Reserved flag bits are zero. Slice is final. All-elements may occur only once
+and causes the display program, not the ABI decoder, to perform bounded
+iteration. A path contains at most 16 steps.
+
+### 4. Literal table
+
+`count:u16`, followed by `kind:u8 || length:u16 || value`. Kinds are unsigned
+integer (1), signed integer (2), bytes (3), string index (4), address (5), bool
+(6), chain id (7), enum map (8), and byte-string set (9). Integers use minimal
+big-endian magnitude/two's-complement encoding. Addresses are 20 bytes, bool is
+one byte 0 or 1, and string indices are two bytes. An enum map is
+`count:u16 || (key_literal:u16 || value_string:u16)*`; keys are strictly
+increasing. A set is `count:u16 || literal_index:u16*`, also strictly
+increasing. Nested references must point backward, preventing cycles.
+
+### 5. Condition table
+
+`count:u16`, followed by fixed 8-byte entries:
+
+`opcode:u8 || path:u16 || literal_set:u16 || flags:u8 || reserved:u16`
+
+Opcodes are always (1), never (2), optional (3), empty (4), not-empty (5), in
+(6), not-in (7), and must-match (8). Always/never/optional use absent path and
+set indices. Empty/not-empty use a path and no set. The remaining operations
+use a path and a section-4 set. `must-match` never displays its field and aborts
+clear signing if comparison fails. Reserved bits and bytes are zero.
+
+### 6. Formatter table
+
+`count:u16`, followed by entries
+`kind:u8 || flags:u8 || argument_count:u8 || arguments`. An argument is
+`role:u8 || source:u8 || index:u16`; source is path (1), literal (2), or string
+(3). Arguments are strictly ordered by role and duplicate roles are rejected.
+
+Formatter kinds are raw (1), native amount (2), token amount (3), NFT name
+(4), date (5), duration (6), unit (7), enum (8), chain id (9), address name
+(10), token ticker (11), ERC-7930 interoperable address (12), embedded calldata
+(13), and encrypted value (14). Defined roles are value (1), token (2),
+collection (3), decimals (4), base unit (5), SI-prefix flag (6), threshold (7),
+threshold message (8), encoding (9), enum map (10), chain id (11), address
+types (12), name sources (13), sender aliases (14), callee (15), selector (16),
+amount (17), spender (18), encryption scheme (19), plaintext type (20), and
+fallback label (21). Unknown kinds, roles, flags or invalid kind/role/source
+combinations are rejected. Live name, token, NFT, time or decryption results
+can annotate the device-decoded operand but have no representation capable of
+replacing it.
+
+### 7. Display instruction table
+
+`count:u16`, followed by fixed 8-byte instructions
+`opcode:u8 || flags:u8 || a:u16 || b:u16 || c:u16`.
+
+| Opcode | a | b | c |
+|---:|---|---|---|
+| 1 intent | fallback intent string | condition or absent | absent |
+| 2 text | string | absent | absent |
+| 3 interpolated value | formatter | absent | absent |
+| 4 field | label string | formatter | condition or absent |
+| 5 group begin | label string or absent | condition or absent | matching end PC |
+| 6 group end | matching begin PC | absent | absent |
+| 7 array begin | path | condition or absent | matching end PC |
+| 8 array end | matching begin PC | separator string or absent | absent |
+| 9 embedded call | label string or absent | calldata formatter | condition or absent |
+| 10 end | absent | absent | absent |
+
+Text and interpolated-value instructions occur only directly after an intent
+and before the next field/group/end; together they are the pre-tokenized
+`interpolatedIntent`. Every interpolated formatter must also appear in a field
+instruction whose condition is always. Any interpolation failure selects the
+fallback intent atomically. Group/array links must be properly nested and are
+the only backward control flow. Array iteration consumes the shared 64-element
+budget. Embedded calls consume the four-level recursion budget and reject a
+definition id already present in the active call chain.
+
+### 8. Binding and external-metadata records
+
+`count:u16`, followed by `kind:u8 || length:u16 || payload`. Records are
+strictly ordered by kind and payload and exact duplicates are rejected.
+
+Kinds are deployment (1: `chain_id:u64 || address:20`), EIP-712 domain
+constraint (2: `field:u8 || operation:u8 || literal:u16`), token (3:
+`chain_id:u64 || address:20 || ticker_string:u16 || decimals:u8`), and network
+(4: `chain_id:u64 || name_string:u16 || ticker_string:u16 || decimals:u8`).
+Domain fields are name, version, chainId, verifyingContract and salt (1-5);
+operations are equal (1) and absent (2). The header's chain/address must match
+one deployment record unless its address is zero, in which case the exact
+transaction target must match one. Proxy/factory resolution is performed by
+the signed catalog compiler into exact deployments; an unauthenticated live
+lookup cannot establish this fact.
+
+### 9. Resource declaration
+
+Exactly 22 bytes:
+
+`strings:u16 || abi_nodes:u16 || paths:u16 || literals:u16 || conditions:u16 ||`
+`formatters:u16 || instructions:u16 || binding_records:u16 ||`
+`abi_depth:u8 || array_elements:u8 || display_depth:u8 || embedded_depth:u8 ||`
+`max_string_length:u16`
+
+All counts and maxima are recomputed while streaming and must match exactly.
+Declared values above a firmware limit are rejected even when the unused
+program path would not reach them.
 
 ## Fixed firmware limits (format 1)
 
