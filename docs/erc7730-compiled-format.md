@@ -30,15 +30,22 @@ additive and cannot suppress raw review.
 | proof | 32 × count | sorted-pair SHA-256 inclusion proof |
 | certificate length | 2 | root-certified delegate certificate length |
 | certificate | variable | KeepKey delegation certificate |
-| signature | 64 | compact secp256k1 signature over the domain and leaf |
+| signature | 64 | compact secp256k1 signature over the purpose domain and catalog root |
 | recovery | 1 | recovery identifier |
 
 The leaf is `SHA256(0x00 || definition)`. An internal node is
 `SHA256(0x01 || min(left,right) || max(left,right))`. The certified catalog
-root and delegate certificate bind provider identity, issuance epoch,
-revocation epoch and the ERC-7730-only purpose.
+root is the leaf after applying every proof sibling. The delegate signature
+digest is `SHA256("KEEPKEY:ERC7730:CATALOG\0" || catalog_root)`, where `\0`
+is one literal NUL byte. Signing the root rather than a bare leaf lets one
+signature authenticate every included definition while the leaf still binds
+the exact canonical program. The delegate certificate binds that signature to
+one chain and the compiled-in KeepKey root; the purpose prefix prevents replay
+as v1-v4 ClearSign metadata.
 
 ## Canonical program header
+
+The format-1 header is exactly 179 bytes.
 
 | Field | Size |
 |---|---:|
