@@ -157,7 +157,8 @@ control characters.
 ### 2. ABI node table
 
 `count:u16`, followed by the 9-byte nodes defined above. Node zero is the root
-tuple. Every non-root node has exactly one parent, every edge points forward,
+tuple; for an argumentless call it is the sole node and has no children.
+Every non-root node has exactly one parent, every edge points forward,
 and the child ranges cover exactly nodes 1 through `count-1`. This makes the
 wire representation a canonical tree rather than an aliasable DAG.
 
