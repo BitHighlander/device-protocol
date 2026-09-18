@@ -232,6 +232,9 @@ formatters require scheme, plaintext type and plaintext formatter roles.
 Unknown kinds, roles, flags or invalid kind/role/source combinations are
 rejected. Live name, token, NFT, time or decryption results can annotate the
 device-decoded operand but have no representation capable of replacing it.
+The token role of a token-amount formatter is optional. When absent, firmware
+must display the device-decoded integer as an unknown-token value; token
+threshold, chain and native-alias roles are then forbidden.
 
 ### 7. Display instruction table
 
