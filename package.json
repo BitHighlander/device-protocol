@@ -1,6 +1,6 @@
 {
   "name": "@bithighlander/device-protocol",
-  "version": "7.18.0",
+  "version": "7.19.0",
   "publishConfig": {
     "access": "public"
   },
