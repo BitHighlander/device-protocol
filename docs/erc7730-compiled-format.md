@@ -181,9 +181,10 @@ Each step begins with an opcode:
 | 2 | none | all elements of the current array |
 | 3 | `flags:u8 [start:i32] [end:i32]` | half-open slice; flags bit 0/1 indicate start/end |
 
-Reserved flag bits are zero. Slice is final. All-elements may occur only once
-and causes the display program, not the ABI decoder, to perform bounded
-iteration. A path contains at most 16 steps.
+Reserved flag bits are zero. Slice is final. Each all-elements selector
+corresponds to one enclosing array instruction; nested arrays therefore
+contain one selector per active array frame. The display program, not the ABI
+decoder, performs bounded iteration. A path contains at most 16 steps.
 
 ### 4. Literal table
 
