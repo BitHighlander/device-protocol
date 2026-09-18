@@ -294,7 +294,7 @@ program path would not reach them.
 
 ## Fixed firmware limits (format 1)
 
-- 64 ABI nodes and 8 levels of ABI nesting
+- 64 ABI nodes and 12 levels of ABI nesting
 - 64 aggregate decoded array elements
 - 16 path components
 - 64 paths, 64 fields and 32 conditions
