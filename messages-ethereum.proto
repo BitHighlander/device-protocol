@@ -376,3 +376,77 @@ message EthereumTypedDataValueRequest {
 message EthereumTypedDataValueAck {
     required bytes value = 1;
 }
+
+// ── ERC-7730 v2 compiled definitions ─────────────────────────────────
+//
+// JSON descriptors never cross the device boundary. The host resolves their
+// includes, names, references, maps, groups and Solidity fragments into the
+// canonical binary program documented in docs/erc7730-compiled-format.md.
+// Firmware verifies the signed program and interprets values from the exact
+// transaction/EIP-712 stream it signs.
+
+enum EthereumClearSignDefinitionKind {
+    ERC7730_CALLDATA = 1;
+    ERC7730_EIP712 = 2;
+    ERC7730_TOKEN = 3;
+    ERC7730_NETWORK = 4;
+}
+
+/**
+ * Preload a signed definition before signing (offline/cache path). Chunks MUST
+ * be contiguous from offset zero. The first chunk supplies total_length;
+ * subsequent chunks bind to the same 32-byte definition_id (SHA-256 of the
+ * complete signed envelope). No definition becomes usable before the final
+ * chunk, signature, catalog proof and compiled program all verify.
+ * @next EthereumClearSignDefinitionAck
+ * @next Failure
+ */
+message EthereumClearSignDefinition {
+    required bytes definition_id = 1;
+    required uint32 offset = 2;
+    required uint32 total_length = 3;
+    required bytes data = 4;
+}
+
+/** Response to a preload chunk. */
+message EthereumClearSignDefinitionAck {
+    required bytes definition_id = 1;
+    required uint32 next_offset = 2;
+    required bool complete = 3;
+}
+
+/**
+ * Device request for a catalog definition during calldata or EIP-712 signing.
+ * The lookup tuple is authenticated again from the returned definition; these
+ * fields select an entry but never grant trust. selector_or_type_hash is four
+ * bytes for calldata, 32 bytes for EIP-712, and omitted for token/network
+ * lookups. Offsets address the complete signed envelope, beginning at K773.
+ * A definition_id commits to the entire envelope, not independently
+ * authenticated ranges, so firmware verifies a contiguous offset-zero replay
+ * before consuming its program bytes for display.
+ * @next EthereumClearSignDefinitionChunk
+ * @next Failure
+ */
+message EthereumClearSignDefinitionRequest {
+    required EthereumClearSignDefinitionKind kind = 1;
+    required uint64 chain_id = 2;
+    optional bytes contract_address = 3;
+    optional bytes selector_or_type_hash = 4;
+    optional bytes definition_id = 5;
+    required uint32 offset = 6;
+    required uint32 length = 7;
+    optional uint32 recursion_depth = 8;
+}
+
+/**
+ * Host response to an on-demand definition request. Chunks are contiguous and
+ * offset is relative to the complete signed envelope. Program bytes remain
+ * untrusted until the complete replay hashes to definition_id and its catalog
+ * authentication verifies.
+ */
+message EthereumClearSignDefinitionChunk {
+    required bytes definition_id = 1;
+    required uint32 offset = 2;
+    required uint32 total_length = 3;
+    required bytes data = 4;
+}
