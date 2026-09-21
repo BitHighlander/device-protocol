@@ -356,6 +356,10 @@ message Features {
           // MIXED dice derivation are implemented. Hosts MUST check this before
           // offering either dice mode: older firmware skips the unknown
           // dice_only field and derives a different wallet without complaint.
+  optional bool supports_solana_lut_attestation =
+      29; // Firmware authenticates and presents host-resolved Solana address
+          // lookup-table accounts. False/absent means LUT data remains opaque
+          // and must follow the ordinary AdvancedMode blind-signing review.
 }
 
 /**
