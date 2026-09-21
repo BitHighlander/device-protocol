@@ -102,6 +102,20 @@ enum MessageType {
   MessageType_EthereumMetadataAck = 116 [ (wire_out) = true ];
   MessageType_LoadClearsignSigner = 117 [ (wire_in) = true ];
 
+  // Structured EIP-712, device-driven field streaming. Allocated in a fresh
+  // block rather than after the 108-117 Ethereum run: the low range is where
+  // upstream Trezor allocates too, and keeping clear of it means adopting more
+  // of their messages later never collides.
+  MessageType_EthereumSignTypedData = 1704 [ (wire_in) = true ];
+  MessageType_EthereumTypedDataStructRequest = 1705 [ (wire_out) = true ];
+  MessageType_EthereumTypedDataStructAck = 1706 [ (wire_in) = true ];
+  MessageType_EthereumTypedDataValueRequest = 1707 [ (wire_out) = true ];
+  MessageType_EthereumTypedDataValueAck = 1708 [ (wire_in) = true ];
+  MessageType_EthereumClearSignDefinition = 1709 [ (wire_in) = true ];
+  MessageType_EthereumClearSignDefinitionAck = 1710 [ (wire_out) = true ];
+  MessageType_EthereumClearSignDefinitionRequest = 1711 [ (wire_out) = true ];
+  MessageType_EthereumClearSignDefinitionChunk = 1712 [ (wire_in) = true ];
+
   // BIP-85
   MessageType_GetBip85Mnemonic = 120 [ (wire_in) = true ];
   MessageType_Bip85Mnemonic = 121 [ (wire_out) = true ];
@@ -255,11 +269,19 @@ enum MessageType {
   MessageType_HiveSignAccountUpdate = 1608 [ (wire_in) = true ];
   MessageType_HiveSignedAccountUpdate = 1609 [ (wire_out) = true ];
 
-  // NEAR
+  // NEAR -- SCHEMA ONLY, NOT YET IMPLEMENTED BY FIRMWARE.
+  // These IDs and messages-near.proto define the intended NEAR wire surface so
+  // that 1610-1613 stay allocated and cannot be reused. Firmware 7.15 / RC18
+  // ships NO NEAR handler, so a device on that release answers any of these
+  // requests with Failure_UnexpectedMessage. Hosts must not advertise NEAR
+  // support on the basis of these bindings; treat the schema as reserved until
+  // a firmware release documents NEAR as supported.
   MessageType_NearGetAddress = 1610 [ (wire_in) = true ];
   MessageType_NearAddress = 1611 [ (wire_out) = true ];
   MessageType_NearSignTx = 1612 [ (wire_in) = true ];
   MessageType_NearSignedTx = 1613 [ (wire_out) = true ];
+
+  // Hive (continued)
   MessageType_HiveSignMessage = 1614 [ (wire_in) = true ];
   MessageType_HiveSignedMessage = 1615 [ (wire_out) = true ];
   MessageType_HiveSignOperations = 1616 [ (wire_in) = true ];
