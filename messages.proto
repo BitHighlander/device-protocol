@@ -1077,6 +1077,11 @@ message DebugLinkState {
   optional bytes dice_digest =
       15; // SHA-256 of the ASCII dice-roll string collected during a
           // dice_entropy ResetDevice workflow
+  optional string confirm_title =
+      16; // title of the most recent confirmation screen, as formatted
+  optional string confirm_body =
+      17; // body of the most recent confirmation screen, as formatted and
+          // before pagination; lets tests assert exact displayed text
 }
 
 /**
