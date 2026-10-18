@@ -396,6 +396,7 @@ message Features {
     CAPABILITY_TRON_TRC20_REVIEW = 25;  // TRC-20 transfers on firmware-trusted contracts clear-sign with symbol and decimals; other contracts need AdvancedMode.
     CAPABILITY_EIP712_CHUNKED_VALUES = 26;  // EIP-712 bytes and string values over 1024 bytes are sent in chunks, shown in full and hashed whole.
     CAPABILITY_CERTIFIED_CONTACTS = 27;  // A contact from an address book the user certified on this device is named on a plain send; the full address is still shown.
+    CAPABILITY_CERTIFIED_CONTACTS_UTXO = 28;  // Bitcoin-family contacts (exact output script, bound to one coin) can be certified, and SignTx.contact_proof names one on its output screen beside the full address.
   }
   repeated Capability capabilities = 30 [packed = true];
 }
@@ -915,6 +916,13 @@ message SignTx {
       8; // only for Zcash, nVersionGroupId when overwintered is set
   optional uint32 branch_id =
       10; // only for Zcash, BRANCH_ID when overwintered is set
+  // KKABPRF1 proof for one certified UTXO_SCRIPT contact
+  // (CAPABILITY_CERTIFIED_CONTACTS_UTXO). Used by this SignTx only. An output
+  // whose script and coin match is shown with the contact's name beside its
+  // full address. A proof the device cannot verify, or one for another coin,
+  // is ignored and the transaction is reviewed as usual; firmware without
+  // the capability skips the field.
+  optional bytes contact_proof = 16;
 }
 
 /**
@@ -1188,6 +1196,9 @@ message ClearsignAttestorPublicKey {
  *             SHA256 of the 46-byte manifest "KKABRT01" || version ||
  *             revision (4, big-endian) || count || Merkle root, not over the
  *             payload.
+ *             Entries are EVM addresses (type 1, eip155 networks) and, with
+ *             CAPABILITY_CERTIFIED_CONTACTS_UTXO, exact standard output
+ *             scripts (type 2) on a bip122 network the firmware knows.
  * Requires an unlocked session and an on-device confirmation.
  * @next ClearsignAttestorSignature
  * @next Failure
