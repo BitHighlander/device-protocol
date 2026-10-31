@@ -397,6 +397,7 @@ message Features {
     CAPABILITY_EIP712_CHUNKED_VALUES = 26;  // EIP-712 bytes and string values over 1024 bytes are sent in chunks, shown in full and hashed whole.
     CAPABILITY_CERTIFIED_CONTACTS = 27;  // A contact from an address book the user certified on this device is named on a plain send; the full address is still shown.
     CAPABILITY_ERC7730_TYPED_ITERATION = 29;  // A typed-data ERC-7730 definition may iterate one array (Seaport offer and consideration), each element's fields shown once, numbered i of n.
+    CAPABILITY_ERC7730_TYPED_SETTLEMENT = 30;  // A typed-data ERC-7730 order definition may mark what the order gives and pays out; the device then shows what this wallet receives and warns when it receives nothing, or only unknown tokens, NFTs or dust for what it gives.
   }
   repeated Capability capabilities = 30 [packed = true];
 }
