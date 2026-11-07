@@ -92,6 +92,9 @@ enum MessageType {
   MessageType_EthereumMessageSignature = 110 [ (wire_out) = true ];
   MessageType_ChangeWipeCode = 111 [ (wire_in) = true ];
 
+  // Separate from the numeric PIN-matrix wipe code.
+  MessageType_ChangeDuressPassphrase = 1800 [ (wire_in) = true ];
+
   // eip-712 messages
   MessageType_EthereumSignTypedHash = 112 [ (wire_in) = true ];
   MessageType_EthereumTypedDataSignature = 113 [ (wire_out) = true ];
@@ -401,6 +404,10 @@ message Features {
     CAPABILITY_ERC7730_TYPED_SETTLEMENT = 30;  // A typed-data ERC-7730 order definition may mark what the order gives and pays out; the device then shows what this wallet gives and what it receives net, and warns on what it can tell from the order alone (nothing, or only unknown tokens, NFTs or dust, for what it gives).
   }
   repeated Capability capabilities = 30 [packed = true];
+  // Hosts must require support before offering configuration. A configured
+  // passphrase wipes on normal PassphraseAck entry, before wallet derivation.
+  optional bool supports_duress_passphrase = 31;
+  optional bool duress_passphrase_protection = 32;
 }
 
 /**
@@ -1154,6 +1161,24 @@ message DebugLinkFillConfig {}
  */
 message ChangeWipeCode {
   optional bool remove = 1; // is wipe code removal requested?
+}
+
+/**
+ * Request: configure or remove a duress wipe passphrase.
+ * Requires fresh PIN authorization and on-device consent. When setting, the
+ * device requests the new value twice using PassphraseRequest/PassphraseAck.
+ * Passphrases are byte-exact, nonempty, at most 50 bytes. Entering the value
+ * during a normal wallet passphrase request immediately factory-resets the
+ * device without another confirmation and fails the pending operation.
+ * @start
+ * @next ButtonRequest
+ * @next PinMatrixRequest
+ * @next PassphraseRequest
+ * @next Success
+ * @next Failure
+ */
+message ChangeDuressPassphrase {
+  optional bool remove = 1 [default = false];
 }
 
 //////////////////////////
