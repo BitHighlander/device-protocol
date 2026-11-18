@@ -436,6 +436,7 @@ message Features {
     // 27). It is claimed only when it lands on upstream master, and once
     // claimed it is never remapped.
     CAPABILITY_MONERO_SIGNING = 31;  // Monero is signed entirely on the device; the host builds no proof and holds no secret.
+    CAPABILITY_CERTIFIED_CONTACTS_ALL_CHAINS = 32; // ADDRESS_TEXT certificates and native signer recipient adapters; full raw destinations remain mandatory.
   }
   repeated Capability capabilities = 30 [packed = true];
 }
